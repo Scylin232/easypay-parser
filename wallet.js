@@ -4,10 +4,10 @@ const app = express();
 
 app.get('/', async (req, res) => {
   const returnData = [];
-  const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']});
+  const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'], defaultViewport: null, slowMo:10});
   const page = await browser.newPage();
   console.log('Created page')
-  await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/80.0.3987.0 Safari/537.36');
   console.log('Seted user agent')
   await page.goto('https://easypay.ua/ua', { waitUntil: 'networkidle0' });
   console.log('Going to Easypay page')
@@ -19,8 +19,6 @@ app.get('/', async (req, res) => {
   console.log('Inputed password')
   await page.click('button[class="button relative"]');
   console.log('Clicked Login twice and screenshot time out')
-  await new Promise(r => setTimeout(r, 5000));
-  await page.screenshot({ path: 'timeout.png' })
   await page.waitForNavigation({ waitUntil: 'networkidle0' });
   await page.setRequestInterception(true);
   page.on('request', req => {
