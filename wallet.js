@@ -19,9 +19,7 @@ app.get('/', async (req, res) => {
   console.log('Inputed password')
   await page.click('button[class="button relative"]');
   console.log('Clicked Login twice and screenshot time out')
-  // await page.waitForNavigation({ waitUntil: 'networkidle0' });
-  await page.screenshot({ path: 'timeout.png' });
-  console.log('Redirected')
+  await page.waitForNavigation({ waitUntil: 'networkidle0' });
   await page.setRequestInterception(true);
   console.log('Start capturing packages')
   page.on('request', req => {
