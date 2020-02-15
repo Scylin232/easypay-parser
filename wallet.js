@@ -18,14 +18,13 @@ app.get('/', async (req, res) => {
   await page.type('input[id="password"]', 'Lolik232');
   console.log('Inputed password')
   await page.click('button[class="button relative"]');
-  console.log('Clicked Login twice')
+  console.log('Clicked Login twice and screenshot time out')
+  await new Promise(r => setTimeout(r, 5000));
+  await page.screenshot({ path: 'timeout.png' })
   await page.waitForNavigation({ waitUntil: 'networkidle0' });
-  console.log('Waiting for token')
   await page.setRequestInterception(true);
-  console.log('Capturing packages')
   page.on('request', req => {
     if (req._headers.authorization) {
-      console.log('Token finded!')
       returnData.push(req._headers);
       req.abort();
     } else {
