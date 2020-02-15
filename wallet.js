@@ -19,6 +19,8 @@ app.get('/', async (req, res) => {
   console.log('Inputed password')
   await page.click('button[class="button relative"]');
   console.log('Clicked Login twice and screenshot time out')
+  await new Promise(r => setTimeout(r, 10000));
+  await page.screenshot({ page: 'test.png' })
   await page.waitForNavigation();
   await page.setRequestInterception(true);
   console.log('Start capturing packages')
