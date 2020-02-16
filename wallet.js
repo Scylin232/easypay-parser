@@ -1,6 +1,14 @@
 const puppeteer = require('puppeteer');
 const express = require('express');
+const cors = require('cors');
 const app = express();
+
+app.use(cors());
+
+let credentials = {
+  login: '380992077402',
+  password: 'Lolik232',
+}
 
 app.get('/', async (req, res) => {
   const returnData = [];
@@ -9,8 +17,8 @@ app.get('/', async (req, res) => {
   await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
   await page.goto('https://easypay.ua/ua', { waitUntil: 'networkidle0' });
   await page.click('button[class="header__sign-in shrink medium-5 column"]');
-  await page.type('input[id="sign-in-phone"]', '380992077402');
-  await page.type('input[id="password"]', 'Lolik232');
+  await page.type('input[id="sign-in-phone"]', credentials.login);
+  await page.type('input[id="password"]', credentials.password);
   await page.click('button[class="button relative"]');
   await page.waitForNavigation({ waitUntil: 'networkidle0' });
   await page.setRequestInterception(true);
@@ -25,6 +33,13 @@ app.get('/', async (req, res) => {
   await new Promise(r => setTimeout(r, 10000));
   await browser.close();
   res.send({ pageId: returnData[0].pageid, appId: returnData[0].appid, bearerToken: returnData[0].authorization.split(' ')[1] });
+});
+
+app.post('/setCredentials', async (req, res) => {
+  const { login, password } = req.query;
+  credentials.login = login;
+  credentials.password = password;
+  return await res.status(200).send('Credentials updates succesfuly!');
 });
 
 app.listen(4515, () => {
