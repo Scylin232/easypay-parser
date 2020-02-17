@@ -1,0 +1,1 @@
+web: node wallet.js
