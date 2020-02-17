@@ -4,6 +4,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
+const appPort = process.env.PORT || 4515
 
 let credentials = {
   login: '380992077402',
@@ -43,6 +44,6 @@ app.post('/setCredentials', async (req, res) => {
   return await res.status(200).send('Credentials updates succesfuly!');
 });
 
-app.listen(4515, () => {
-  console.log('Example app listening on port 4515!');
+app.listen(appPort, () => {
+  console.log('Example app listening on port: ', appPort);
 });
