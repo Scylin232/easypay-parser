@@ -8,7 +8,7 @@ app.use(cors());
 let credentials = {
   login: '380992077402',
   password: 'Lolik232',
-}
+};
 
 app.get('/', async (req, res) => {
   const returnData = [];
@@ -37,6 +37,7 @@ app.get('/', async (req, res) => {
 
 app.post('/setCredentials', async (req, res) => {
   const { login, password } = req.query;
+  console.log(login, password);
   credentials.login = login;
   credentials.password = password;
   return await res.status(200).send('Credentials updates succesfuly!');
