@@ -1,19 +1,18 @@
 const puppeteer = require('puppeteer');
 const express = require('express');
 const cors = require('cors');
+const schedule = require('node-schedule');
+
+const appPort = process.env.PORT || 4515
 const app = express();
+let returnData = [];
 
 app.use(cors());
-const appPort = process.env.PORT || 4515
 
-let credentials = {
-  login: '380992077402',
-  password: 'Lolik232',
-};
+let credentials = { login: '380992077402', password: 'Lolik232' };
 
-app.get('/', async (req, res) => {
-  console.log('Started!')
-  const returnData = [];
+schedule.scheduleJob('*/15 * * * *', async () => {
+  returnData = [];
   const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
@@ -34,6 +33,14 @@ app.get('/', async (req, res) => {
   });
   await new Promise(r => setTimeout(r, 10000));
   await browser.close();
+  console.log('All completed succesfuly.');
+});
+
+app.get('/', async (req, res) => {
+  if (returnData[0] === undefined) {
+    return console.log('Data is undefined');
+  };
+  console.log('Returned: ', credentials);
   res.send({ pageId: returnData[0].pageid, appId: returnData[0].appid, bearerToken: returnData[0].authorization.split(' ')[1] });
 });
 
