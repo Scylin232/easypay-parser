@@ -1,19 +1,10 @@
-const axios = require('axios');
 const puppeteer = require('puppeteer');
-const express = require('express');
-const cors = require('cors');
 const schedule = require('node-schedule');
-
-const appPort = process.env.PORT || 4515
-const app = express();
-let easyPayParams = {};
-
-app.use(cors());
-
-let credentials = { login: '380992077402', password: 'Lolik232' };
+const mongo = require('./mongo');
 
 const getToken = async () => {
   const tempArray = [];
+  const credentials = await mongo.credentialsModel.findById('5e4e36c5d5b4492364eeda8d').lean()
   const browser = await puppeteer.launch({headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox']});
   const page = await browser.newPage();
   await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
@@ -33,58 +24,13 @@ const getToken = async () => {
     };
   });
   await new Promise(r => setTimeout(r, 10000));
-  easyPayParams = { pageId: tempArray[0].pageid, appId: tempArray[0].appid, bearerToken: tempArray[0].authorization.split(' ')[1] };
+  await mongo.tokenModel.findByIdAndUpdate('5e4e37a0d5b4492364eeda92', { pageId: tempArray[0].pageid, appId: tempArray[0].appid, bearerToken: tempArray[0].authorization.split(' ')[1] });
   await browser.close();
-  console.log('All completed succesfuly.');
+  console.log('All completed succesfuly, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
 };
 
 schedule.scheduleJob('*/15 * * * *', async () => {
   await getToken();
-});
-
-app.get('/wallets', async (req, res) => {
-  if (easyPayParams.pageId === undefined) {
-    return await res.status(200).send('Token is unvailable.');
-  }
-  const easypay = await axios({
-    url: 'https://api.easypay.ua/api/wallets/get',
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${easyPayParams.bearerToken}`,
-      'AppId': easyPayParams.appId,
-      'PageId': easyPayParams.pageId
-    }
-  })
-  return await res.status(200).send(easypay.data.wallets);
-})
-
-app.get('/getWalletById', async (req, res) => {
-  if (easyPayParams.pageId === undefined || req.query.walletId === undefined) {
-    return await res.status(200).send('Token is unvailable.');
-  }
-  const walletId = req.query.walletId;
-  const easypay = await axios({
-    url: `https://api.easypay.ua/api/wallets/get/${walletId}`,
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${easyPayParams.bearerToken}`,
-      'AppId': easyPayParams.appId,
-      'PageId': easyPayParams.pageId
-    }
-  });
-  return await res.status(200).send(easypay.data.wallets);
-})
-
-app.post('/setCredentials', async (req, res) => {
-  const { login, password } = req.query;
-  console.log(login, password);
-  credentials.login = login;
-  credentials.password = password;
-  return await res.status(200).send('Credentials updates succesfuly!');
-});
-
-app.listen(appPort, () => {
-  console.log('App listening on port: ', appPort);
 });
 
 (async () => {
