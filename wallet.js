@@ -6,7 +6,7 @@ const getToken = async () => {
   try {
     const tempArray = [];
     const credentials = await mongo.credentialsModel.findById('5e4e36c5d5b4492364eeda8d').lean()
-    const browser = await puppeteer.launch({headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox']});
+    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']});
     const page = await browser.newPage();
     await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
     await page.goto('https://easypay.ua/ua', { waitUntil: 'networkidle0' });
