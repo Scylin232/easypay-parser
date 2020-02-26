@@ -1,18 +1,18 @@
 const puppeteer = require('puppeteer');
 const schedule = require('node-schedule');
-const mongo = require('./mongo');
+const fs = require('fs');
 
 const getToken = async () => {
   try {
     const tempArray = [];
-    const credentials = await mongo.credentialsModel.findById('5e4e36c5d5b4492364eeda8d').lean()
+    const [login, password] = await fs.readFileSync('../easypayCredentials.dat', 'utf-8').split(/\r?\n/);
     const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']});
     const page = await browser.newPage();
     await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
     await page.goto('https://easypay.ua/ua', { waitUntil: 'networkidle0' });
     await page.click('button[class="header__sign-in shrink medium-5 column"]');
-    await page.type('input[id="sign-in-phone"]', credentials.login);
-    await page.type('input[id="password"]', credentials.password);
+    await page.type('input[id="sign-in-phone"]', login);
+    await page.type('input[id="password"]', password);
     await page.click('button[class="button relative"]');
     await page.waitForNavigation({ waitUntil: 'networkidle0' });
     await page.setRequestInterception(true);
@@ -25,7 +25,7 @@ const getToken = async () => {
       };
     });
     await new Promise(r => setTimeout(r, 10000));
-    await mongo.tokenModel.findByIdAndUpdate('5e4e37a0d5b4492364eeda92', { pageId: tempArray[0].pageid, appId: tempArray[0].appid, bearerToken: tempArray[0].authorization.split(' ')[1] });
+    await fs.writeFileSync('../easypayData.dat', `${tempArray[0].pageid}\n${tempArray[0].appid}\n${tempArray[0].authorization.split(' ')[1]}`);
     await browser.close();
     console.log('All completed succesfuly, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
   } catch(err) {
