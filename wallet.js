@@ -48,14 +48,14 @@ const globalMoneyGetToken = async () => {
 };
 
 schedule.scheduleJob('*/15 * * * *', async () => {
-  // await easyPayGetToken();
+  await easyPayGetToken();
 });
 
 schedule.scheduleJob('0 * * * *', async () => {
-  // await globalMoneyGetToken();
+  await globalMoneyGetToken();
 });
 
 (async () => {
   await globalMoneyGetToken();
-  // await easyPayGetToken();
+  await easyPayGetToken();
 })();
