@@ -1,8 +1,10 @@
 const puppeteer = require('puppeteer');
+const axios = require('axios');
+const sha1 = require('sha1');
 const schedule = require('node-schedule');
 const fs = require('fs');
 
-const getToken = async () => {
+const easyPayGetToken = async () => {
   try {
     const tempArray = [];
     const [login, password] = await fs.readFileSync('../easypayCredentials.dat', 'utf-8').split(/\r?\n/);
@@ -27,16 +29,33 @@ const getToken = async () => {
     await new Promise(r => setTimeout(r, 10000));
     await fs.writeFileSync('../easypayData.dat', `${tempArray[0].pageid}\n${tempArray[0].appid}\n${tempArray[0].authorization.split(' ')[1]}`);
     await browser.close();
-    console.log('All completed succesfuly, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
+    console.log('EasyPay, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
   } catch(err) {
     console.log(err.message);
   };
 };
 
+
+const globalMoneyGetToken = async () => {
+  try {
+    const [login, password] = await fs.readFileSync('../globalmoneyCredentials.dat', 'utf-8').split(/\r?\n/);
+    const response = await axios.post(`https://globalmoney.ua/login?j_username=${login}&j_password=${sha1(password)}`);
+    await fs.writeFileSync('../globalmoneyData.dat', `${response.data.content.token}\n${response.data.content.info.walletId}`);
+    console.log('GlobalMoney, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
+  } catch (err) {
+    console.log(err.message);
+  };
+};
+
 schedule.scheduleJob('*/15 * * * *', async () => {
-  await getToken();
+  // await easyPayGetToken();
+});
+
+schedule.scheduleJob('0 * * * *', async () => {
+  // await globalMoneyGetToken();
 });
 
 (async () => {
-  await getToken();
+  await globalMoneyGetToken();
+  // await easyPayGetToken();
 })();
