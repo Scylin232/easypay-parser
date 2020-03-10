@@ -52,7 +52,7 @@ const easyPayGetToken = async () => {
     fs.writeFileSync('../easypayData.dat', `${easypayData.data.pageId}\n${easypayData.data.appId}\n${easypayToken.data.access_token}`);
     console.log('EasyPay, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
   } catch(err) {
-    console.log(err);
+    console.log(err, err.response, err.response.data);
   };
 };
 
