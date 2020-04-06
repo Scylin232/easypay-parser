@@ -1,76 +1,69 @@
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
 const axios = require('axios');
 const sha1 = require('sha1');
 const schedule = require('node-schedule');
 const fs = require('fs');
 
-const easyPayGetToken = async () => {
-  try {
-    const [login, password] = await fs.readFileSync('../easypayCredentials.dat', 'utf-8').split(/\r?\n/);    
-    const easypayData = await axios({
-      url: 'https://api.easypay.ua/api/system/createApp',
-      method: 'POST',
-      headers: {
-        'authority': 'api.easypay.ua',
-        'content-length': '0',
-        'appid': 'null',
-        'locale': 'ru',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-        'content-type': 'application/json; charset=UTF-8',
-        'accept': 'application/json, text/plain, */*',
-        'sec-fetch-dest': 'empty',
-        'pageid': 'null',
-        'partnerkey': 'easypay-v2',
-        'origin': 'https://easypay.ua',
-        'sec-fetch-site': 'same-site',
-        'sec-fetch-mode': 'cors',
-        'referer': 'https://easypay.ua/',
-        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-      }
-    });
-    const easypayToken = await axios({
-      url: 'https://api.easypay.ua/api/token',
-      method: 'POST',
-      headers: {
-        'authority': 'api.easypay.ua',
-        'content-length': '0',
-        'appid': `${easypayData.data.appId}`,
-        'locale': 'ru',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-        'content-type': 'application/json; charset=UTF-8',
-        'accept': 'application/json, text/plain, */*',
-        'sec-fetch-dest': 'empty',
-        'pageid': `${easypayData.data.pageId}`,
-        'partnerkey': 'easypay-v2',
-        'origin': 'https://easypay.ua',
-        'sec-fetch-site': 'same-site',
-        'sec-fetch-mode': 'cors',
-        'referer': 'https://easypay.ua/',
-        'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-      },
-      data:`grant_type=password&username=${login}&password=${password}&client_id=easypay-v2`,
-    });
-    fs.writeFileSync('../easypayData.dat', `${easypayData.data.pageId}\n${easypayData.data.appId}\n${easypayToken.data.access_token}`);
-    console.log('EasyPay, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
-  } catch(err) {
-    console.log(err, err.response);
-  };
-};
+// puppeteer.use(StealthPlugin());
+// puppeteer.use(
+//   RecaptchaPlugin({
+//     provider: {
+//       id: '2captcha',
+//       token: '2d3dbd7547a34d541f5b958c1f99ff03'
+//     },
+//     visualFeedback: true
+//   })
+// );
 
+// const easyPayGetToken = async () => {
+//   try {
+//     const [login, password] = ['380992077402', 'Lolik232']
+//     const browser = await puppeteer.launch({slowMo: 250, headless: true, args: ['--no-sandbox']});
+//     const page = await browser.newPage();
+//     await page.goto('https://easypay.ua/ua', { waitUntil: 'networkidle0' });
+//     await page.click('button[class="header__sign-in shrink medium-5 column"]');
+//     await page.type('input[id="sign-in-phone"]', login);
+//     await page.type('input[id="password"]', password);
+//     await page.click('button[class="button relative"]');
+//     await new Promise(r => setTimeout(r, 5000));
+//     await page.solveRecaptchas();
+//     await page.screenshot({ path: './file3333.jpg' });
+//     await browser.close();
+//     console.log('EasyPay, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
+//   } catch(err) {
+//     console.log(err.message);
+//   };
+// };
 
 const globalMoneyGetToken = async () => {
   try {
     const [login, password] = await fs.readFileSync('../globalmoneyCredentials.dat', 'utf-8').split(/\r?\n/);
-    const response = await axios.post(`https://globalmoney.ua/login?j_username=${login}&j_password=${sha1(password)}`);
-    await fs.writeFileSync('../globalmoneyData.dat', `${response.data.content.token}\n${response.data.content.info.walletId}`);
+    const response = await axios({
+      url: 'https://art.global24.com.ua/login',
+      method: 'POST',
+      headers: {
+        'accept': `application/json`,
+        'content-type': `application/json`,
+        'user-agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36`,
+      },
+      data: {
+        'loginType': 'phone',
+        'login': login,
+        'password': sha1(password),
+      },
+    });
+    await fs.writeFileSync('../globalmoneyData.dat', `${response.data.keytoken}\n${response.data.wallet.id}`);
     console.log('GlobalMoney, at:', new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Kiev'}));
   } catch (err) {
     console.log(err.message);
   };
 };
 
-schedule.scheduleJob('*/20 * * * *', async () => {
-  await easyPayGetToken();
-});
+// schedule.scheduleJob('*/20 * * * *', async () => {
+//   await easyPayGetToken();
+// });
 
 schedule.scheduleJob('0 * * * *', async () => {
   await globalMoneyGetToken();
@@ -78,5 +71,5 @@ schedule.scheduleJob('0 * * * *', async () => {
 
 (async () => {
   await globalMoneyGetToken();
-  await easyPayGetToken();
+  // await easyPayGetToken();
 })();
