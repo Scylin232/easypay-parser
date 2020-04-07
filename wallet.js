@@ -69,16 +69,21 @@ const easyPayGetToken = async () => {
     await page.type('input[id="password"]', password);
     await page.click('button[class="button relative"]');
     await new Promise(r => setTimeout(r, 5000));
-    const recaptcha = await page.evaluate('document.querySelector("body > div > div:nth-child(2) > iframe").getAttribute("src")');
-    const twoCaptcha = await axios.get(`https://2captcha.com/in.php?key=2d3dbd7547a34d541f5b958c1f99ff03&method=userrecaptcha&googlekey=${queryString.parse(recaptcha).k}&pageurl=https://easypay.ua/ua`);
-    await new Promise(r => setTimeout(r, 61000));
-    const twoCaptchaResponse = await axios.get(`https://2captcha.com/res.php?key=2d3dbd7547a34d541f5b958c1f99ff03&action=get&id=${twoCaptcha.data.split('|')[1]}`); 
-    const splitedData = twoCaptchaResponse.data.split('|');
-    if (splitedData[0] === 'OK') {
-      await browser.close();
-      await requestEasyPayToken(login, password, splitedData[1]);
+    if (await page.$('body > div > div:nth-child(2) > iframe') !== null) {
+      const recaptcha = await page.evaluate('document.querySelector("body > div > div:nth-child(2) > iframe").getAttribute("src")');
+      const twoCaptcha = await axios.get(`https://2captcha.com/in.php?key=2d3dbd7547a34d541f5b958c1f99ff03&method=userrecaptcha&googlekey=${queryString.parse(recaptcha).k}&pageurl=https://easypay.ua/ua`);
+      await new Promise(r => setTimeout(r, 61000));
+      const twoCaptchaResponse = await axios.get(`https://2captcha.com/res.php?key=2d3dbd7547a34d541f5b958c1f99ff03&action=get&id=${twoCaptcha.data.split('|')[1]}`); 
+      const splitedData = twoCaptchaResponse.data.split('|');
+      if (splitedData[0] === 'OK') {
+        await browser.close();
+        await requestEasyPayToken(login, password, splitedData[1]);
+      } else {
+        throw new Error(`2Captcha Status is Failed: ${splitedData}`);
+      };
     } else {
-      throw new Error(`2Captcha Status is Failed: ${splitedData}`);
+      await browser.close();
+      await requestEasyPayToken(login, password, null);
     };
   } catch(err) {
     await browser.close();
